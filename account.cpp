@@ -1,4 +1,5 @@
 #include "account.h"
+#include <math.h>
 
 account::account(int acc_num, int pswrd, int initial_blnce):
     account_num(acc_num), password(pswrd), balance(initial_blnce), rd_cnt(0){
@@ -69,4 +70,13 @@ int account::get_balance(){
         sem_post(wr_sem);
     sem_post(rd_sem);
     return ret_balance; 
+}
+
+int account::take_fees(int percent)
+{
+    sem_wait(wr_sem);
+    int fee = round((double)balance * (double)percent / (double)100);
+    balance -= fee;
+    sem_post(wr_sem);
+    return fee;
 }

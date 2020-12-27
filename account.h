@@ -22,5 +22,6 @@ public:
     int deposit(int amount);
     int withdraw(int amount);
     int get_balance();
+    int take_fees(int percent);
 
 };
