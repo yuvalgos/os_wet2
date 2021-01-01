@@ -22,7 +22,7 @@ public:
     void add_account(int acc_num, int pswrd, int initial_blnce);
     void remove_account(int acc_num);
     account& get_account(int acc_num);
-    int get_fees();
+    void collect_fees();
     void print_accounts();
     int get_bank_balance();
 

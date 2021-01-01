@@ -43,7 +43,7 @@ account& accounts_collection::get_account(int acc_num)
     return ret_acc; 
 }
 
-void accounts_collection::get_fees()
+void accounts_collection::collect_fees()
 {
     int fee_percent = (std::rand()%3) + 2
 
