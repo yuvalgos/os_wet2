@@ -1,6 +1,9 @@
-O abc abc
-D abc abc
-W abc abc
-B abc abc
-Q abc abc
-T abc abc
+O 123 1234 1000
+D 123 1234 500
+W 123 1234 700
+O 123 0000 30
+D 333 0000 20
+D 123 0000 20
+W 333 0000 20
+W 123 0000 50
+W 123 1234 2000

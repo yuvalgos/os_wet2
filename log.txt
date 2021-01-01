@@ -1,0 +1,12 @@
+1: New account id is 123 with password 1234 and initial balance 1000
+Bank: commissions of 4 % were charged, the bank gained 40 $ from account 123
+1: Account 123 new balance is 1500 after 500 $ was deposited
+1: Account 123 new balance is 1660 after 700 $ was withdrew
+Bank: commissions of 3 % were charged, the bank gained 29 $ from account 123
+Error 1: Your transaction failed – account with the same id exists
+Error 1: Your transaction failed – account 333 does not exist
+Error 1: Your transaction failed – password for account id 123 is incorrect
+Error 1: Your transaction failed – account 333 does not exist
+Error 1: Your transaction failed – password for account id 123 is incorrect
+Bank: commissions of 4 % were charged, the bank gained 37 $ from account 123
+Error 1: Your transaction failed – account id 123 balance is lower than 2000

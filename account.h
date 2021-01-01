@@ -2,6 +2,7 @@
 
 #include <pthread.h>
 #include <semaphore.h>
+#include <unistd.h>
 
 class account
 {
@@ -10,11 +11,13 @@ private:
     int password;
     int balance;
 
-    sem_t* rd_sem;
-    sem_t* wr_sem;
+    sem_t rd_sem;
+    sem_t wr_sem;
     int rd_cnt;
     
 public:
+    account();
+    account(const account &acc);
     account(int acc_num, int pswrd, int initial_blnce);
     account(account &acc);
     ~account();

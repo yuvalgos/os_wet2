@@ -1,7 +1,6 @@
-
 CC = g++
 CXXFLAGS = -g -std=c++11 -Wall -Werror -pedantic-errors -DNDEBUG -pthread
-CCLINK = $(CC) 
+CCLINK = $(CC) -pthread
 OBJS = account.o accounts_collection.o bank.o
 RM = rm -f
 # Creating the  executable
