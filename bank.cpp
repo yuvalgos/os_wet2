@@ -65,7 +65,11 @@ int main(int argc, char **argv)
     }
     log_file.close();
     // initiate log file mutex
-    pthread_mutex_init(&mtx_log, NULL);
+    int mutex_error;
+    if((mutex_error = pthread_mutex_init(&mtx_log, NULL)) != 0){
+        fprintf(stderr, "Error: %d - could not init log file mutex\n", mutex_error);
+        exit(1);
+    }
     
     // init thread data
     int num_atms = argc-2;
@@ -103,11 +107,15 @@ int main(int argc, char **argv)
     // wait for atms to finish:
     for(int i = 0; i < num_atms; i++) 
     {
-        pthread_join(atms[i], NULL);
+        if((rc = pthread_join(atms[i], NULL)) != 0) {
+            fprintf(stderr,  "error: pthread_join, rc: %d\n", rc);
+            exit(1);
+        }
     }
 
-    
-
-    pthread_mutex_destroy(&mtx_log);    
+    if((mutex_error = pthread_mutex_destroy(&mtx_log)) != 0){
+        fprintf(stderr, "Error: %d - could not destroy log file mutex\n", mutex_error);
+        exit(1);
+    } 
     return 0;
 }
