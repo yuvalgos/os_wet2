@@ -34,6 +34,10 @@ bool account::check_password(const int pass) const {
     return (pass == password);
 }
 
+int account::get_password() const {
+    return password;
+}
+
 /*assume: 
     password is correct 
     the account exists
@@ -78,6 +82,24 @@ int account::get_balance(){
     if(rd_cnt == 0) 
         sem_post(&wr_sem);
     sem_post(&rd_sem);
+    return ret_balance; 
+}
+
+int account::get_balance_no_sleep(){
+    sem_wait(&rd_sem);
+    rd_cnt++;
+    if (rd_cnt == 1) 
+        sem_wait(&wr_sem);
+    sem_post(&rd_sem); 
+
+    int ret_balance = balance;
+
+    sem_wait(&rd_sem);
+    rd_cnt--;
+    if(rd_cnt == 0) 
+        sem_post(&wr_sem);
+    sem_post(&rd_sem);
+
     return ret_balance; 
 }
 

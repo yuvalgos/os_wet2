@@ -25,7 +25,7 @@ public:
     accounts_collection();
     ~accounts_collection();
     void add_account(int acc_num, int pswrd, int initial_blnce);
-    void remove_account(int acc_num);
+    int remove_account(int acc_num);
     account& get_account(int acc_num);
     void collect_fees();
     void print_accounts();

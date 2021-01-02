@@ -22,9 +22,12 @@ public:
     account(account &acc);
     ~account();
     bool check_password(const int pass) const;
+    int check_password() const;
     int deposit(int amount);
     int withdraw(int amount);
     int get_balance();
     int take_fees(int percent);
+
+    int get_balance_no_sleep();
 
 };

@@ -34,16 +34,17 @@ accounts_collection::~accounts_collection(){
 
 void accounts_collection::add_account(int acc_num, int pswrd, int initial_blnce){
     sem_wait(&wr_sem);
-    account new_account(acc_num,pswrd,initial_blnce);
-    collection[acc_num] = new_account;
+    collection[acc_num] = account(acc_num,pswrd,initial_blnce)
     sem_post(&wr_sem);
 }
 
-void accounts_collection::remove_account(int acc_num)
+int accounts_collection::remove_account(int acc_num)
 {
     sem_wait(&wr_sem);
+    int balance = collection.at(acc_num).get_balance_no_sleep();
     collection.erase(acc_num);
     sem_post(&wr_sem);
+    return balance;
 }
 
 account& accounts_collection::get_account(int acc_num)
@@ -110,7 +111,15 @@ void accounts_collection::print_accounts()
         sem_wait(&wr_sem);
     sem_post(&rd_sem); 
 
-    printf("current bank status");
+    printf(“\033[2J”);
+    printf(“\033[1;1H”);
+    printf("current bank status\n");
+    for(auto iter_acc = collection.begin(); iter_acc != collection.end(); iter_acc++)
+    {
+        printf("Account %d: Balance - %d $ , Account Password - %d\n",
+         iter_acc->first, iter_acc->second.get_balance_no_sleep(), iter_acc->second.get_password());
+    }
+    printf("the bank has %d $\n", bank_balance);
 
     sem_wait(&rd_sem);
     rd_cnt--;
