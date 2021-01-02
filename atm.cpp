@@ -33,7 +33,6 @@ void *atm(void* atm_data)
 
         if(splited_command[0] == "O")
         {
-            printf("O\n");
             int acc_id = std::atoi(splited_command[1].c_str());
             int acc_pass = std::atoi(splited_command[2].c_str());
             int acc_amount = std::atoi(splited_command[3].c_str());
@@ -50,7 +49,6 @@ void *atm(void* atm_data)
         }
         else if(splited_command[0] == "D")
         {
-            printf("D\n");
             int acc_id = std::atoi(splited_command[1].c_str());
             int acc_pass = std::atoi(splited_command[2].c_str());
             int acc_amount = std::atoi(splited_command[3].c_str());
@@ -75,7 +73,6 @@ void *atm(void* atm_data)
         }
         else if(splited_command[0] == "W")
         {
-            printf("W\n");
             int acc_id = std::atoi(splited_command[1].c_str());
             int acc_pass = std::atoi(splited_command[2].c_str());
             int acc_amount = std::atoi(splited_command[3].c_str());
@@ -106,7 +103,6 @@ void *atm(void* atm_data)
         }
         else if(splited_command[0] == "B")
         {
-            printf("B\n");
             int acc_id = std::atoi(splited_command[1].c_str());
             int acc_pass = std::atoi(splited_command[2].c_str());
             
@@ -125,15 +121,13 @@ void *atm(void* atm_data)
                 else
                 {
                     int balance = acc.get_balance();
-                    std::string s = std::to_string(atm_id) + ": Account " + splited_command[1] + " balance is " + balance;
+                    std::string s = std::to_string(atm_id) + ": Account " + splited_command[1] + " balance is " + std::to_string(balance);
                     print_to_log(s);
                 }                
             }        
         }
         else if(splited_command[0] == "Q")
         {
-            printf("Q\n");
-            
             int acc_id = std::atoi(splited_command[1].c_str());
             int acc_pass = std::atoi(splited_command[2].c_str());
             
@@ -152,14 +146,13 @@ void *atm(void* atm_data)
                 else
                 {
                     int balance = accounts.remove_account(acc_id);
-                    std::string s = std::to_string(atm_id) + ": Account " + splited_command[1] + " is now closed. Balance was " + balance;
+                    std::string s = std::to_string(atm_id) + ": Account " + splited_command[1] + " is now closed. Balance was " + std::to_string(balance);
                     print_to_log(s);
                 }                
             }        
         }
         else if(splited_command[0] == "T")
         {
-            printf("T\n");
             int source_acc_id = std::atoi(splited_command[1].c_str());
             int source_acc_pass = std::atoi(splited_command[2].c_str());
             int target_acc_id = std::atoi(splited_command[3].c_str());
@@ -183,7 +176,7 @@ void *atm(void* atm_data)
             {
                 account source_acc = accounts.get_account(source_acc_id);
                 account target_acc = accounts.get_account(target_acc_id);
-                if(!acc.check_password(source_acc_pass)){
+                if(!source_acc.check_password(source_acc_pass)){
                     std::string s = "Error " + std::to_string(atm_id) + ": Your transaction failed – password for account id " + splited_command[1] + " is incorrect"; 
                     print_to_log(s);
                 }

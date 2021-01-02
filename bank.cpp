@@ -106,6 +106,8 @@ int main(int argc, char **argv)
         pthread_join(atms[i], NULL);
     }
 
+    
+
     pthread_mutex_destroy(&mtx_log);    
-    exit(0);
+    return 0;
 }

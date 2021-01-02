@@ -6,27 +6,47 @@
 account::account(){}
 
 account::account(int acc_num, int pswrd, int initial_blnce):
-    account_num(acc_num), password(pswrd), balance(initial_blnce), rd_cnt(0){
-    sem_init(&rd_sem, 0, 1);
-    sem_init(&wr_sem, 0, 0);
+    account_num(acc_num), password(pswrd), balance(initial_blnce), rd_cnt(0), fast_destruct(false){
+    if(sem_init(&rd_sem, 0, 1) < 0){
+        fprintf(stderr, "Error: %d - failed to init accounts_collection read semaphore\n", errno);
+        exit(1);
+    }
+    if(sem_init(&wr_sem, 0, 0) < 0){
+        fprintf(stderr, "Error: %d - failed to init accounts_collection write semaphore\n", errno);
+        exit(1);
+    }
     sleep(1);
     sem_post(&wr_sem);
 }
 
-account::account(account &acc):account_num(acc.account_num), password(acc.password), balance(acc.balance), rd_cnt(acc.rd_cnt){
-    sem_init(&rd_sem, 0, 1);
-    sem_init(&wr_sem, 0, 1);
+account::account(account &acc):account_num(acc.account_num), password(acc.password), balance(acc.balance), rd_cnt(acc.rd_cnt), fast_destruct(false){
+    if(sem_init(&rd_sem, 0, 1) < 0){
+        fprintf(stderr, "Error: %d - failed to init accounts_collection read semaphore\n", errno);
+        exit(1);
+    }
+    if(sem_init(&wr_sem, 0, 1) < 0){
+        fprintf(stderr, "Error: %d - failed to init accounts_collection write semaphore\n", errno);
+        exit(1);
+    }
 }
 
-account::account(const account &acc):account_num(acc.account_num), password(acc.password), balance(acc.balance), rd_cnt(acc.rd_cnt){
-    sem_init(&rd_sem, 0, 1);
-    sem_init(&wr_sem, 0, 1);
+account::account(const account &acc):account_num(acc.account_num), password(acc.password), balance(acc.balance), rd_cnt(acc.rd_cnt), fast_destruct(false){
+    if(sem_init(&rd_sem, 0, 1) < 0){
+        fprintf(stderr, "Error: %d - failed to init accounts_collection read semaphore\n", errno);
+        exit(1);
+    }
+    if(sem_init(&wr_sem, 0, 1) < 0){
+        fprintf(stderr, "Error: %d - failed to init accounts_collection write semaphore\n", errno);
+        exit(1);
+    }
 }
 
 account::~account(){
     sem_wait(&wr_sem);
-    sleep(1);
     sem_destroy(&rd_sem);
+    if(!fast_destruct){
+        sleep(1);
+    }
     sem_destroy(&wr_sem);
 }
 

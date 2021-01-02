@@ -1,4 +1,5 @@
 #include "accounts_collection.h"
+#include <stdio.h>
 
 pthread_mutex_t mtx_log;
 extern std::ofstream log_file;
@@ -23,18 +24,29 @@ void print_to_log(std::string str)
 }
 
 accounts_collection::accounts_collection() : rd_cnt(0), bank_balance(0){
-    sem_init(&rd_sem, 0, 1);
-    sem_init(&wr_sem, 0, 1);
+    if(sem_init(&rd_sem, 0, 1) < 0){
+        fprintf(stderr, "Error: %d - failed to init accounts_collection read semaphore\n", errno);
+        exit(1);
+    }
+    if(sem_init(&wr_sem, 0, 1) < 0){
+        fprintf(stderr, "Error: %d - failed to init accounts_collection write semaphore\n", errno);
+        exit(1);
+    }
 }
 
 accounts_collection::~accounts_collection(){
+    for(auto iter_acc = collection.begin(); iter_acc != collection.end(); iter_acc++)
+    {
+        iter_acc->second.fast_destruct = true;
+    }
+
     sem_destroy(&rd_sem);
     sem_destroy(&wr_sem);
 }
 
 void accounts_collection::add_account(int acc_num, int pswrd, int initial_blnce){
     sem_wait(&wr_sem);
-    collection[acc_num] = account(acc_num,pswrd,initial_blnce)
+    collection[acc_num] = account(acc_num,pswrd,initial_blnce);
     sem_post(&wr_sem);
 }
 
@@ -111,8 +123,8 @@ void accounts_collection::print_accounts()
         sem_wait(&wr_sem);
     sem_post(&rd_sem); 
 
-    printf(“\033[2J”);
-    printf(“\033[1;1H”);
+    printf("\033[2J");
+    printf("\033[1;1H");
     printf("current bank status\n");
     for(auto iter_acc = collection.begin(); iter_acc != collection.end(); iter_acc++)
     {
