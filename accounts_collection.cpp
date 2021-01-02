@@ -1,12 +1,15 @@
 #include "accounts_collection.h"
-#include <stdio.h>
 
 pthread_mutex_t mtx_log;
 extern std::ofstream log_file;
 
 void print_to_log(std::string str)
 {
-    pthread_mutex_lock(&mtx_log);
+    if(pthread_mutex_lock(&mtx_log) != 0)
+    {
+        fprintf(stderr, "error: locking mutex\n");
+        exit(1);
+    }
 
     log_file.open("log.txt" , std::ios_base::app);
     if(log_file.is_open())
@@ -20,60 +23,115 @@ void print_to_log(std::string str)
     }
     log_file.close();
 
-    pthread_mutex_unlock(&mtx_log);
+    if(pthread_mutex_unlock(&mtx_log) != 0)
+    {
+        fprintf(stderr, "error: unlocking mutex\n");
+        exit(1);
+    }
 }
 
 accounts_collection::accounts_collection() : rd_cnt(0), bank_balance(0){
-    if(sem_init(&rd_sem, 0, 1) < 0){
-        fprintf(stderr, "Error: %d - failed to init accounts_collection read semaphore\n", errno);
+    if(sem_init(&rd_sem, 0, 1) < 0)
+    {
+        fprintf(stderr, "error: initializing semaphore\n");
         exit(1);
     }
-    if(sem_init(&wr_sem, 0, 1) < 0){
-        fprintf(stderr, "Error: %d - failed to init accounts_collection write semaphore\n", errno);
+    if(sem_init(&wr_sem, 0, 1) < 0)
+    {
+        fprintf(stderr, "error: initializing semaphore\n");
         exit(1);
     }
 }
 
 accounts_collection::~accounts_collection(){
-    for(auto iter_acc = collection.begin(); iter_acc != collection.end(); iter_acc++)
+    if(sem_destroy(&rd_sem) < 0)
     {
-        iter_acc->second.fast_destruct = true;
+        fprintf(stderr, "error: initializing semaphore\n");
+        exit(1);
     }
-
-    sem_destroy(&rd_sem);
-    sem_destroy(&wr_sem);
+    if(sem_destroy(&wr_sem) < 0)
+    {
+        fprintf(stderr, "error: initializing semaphore\n");
+        exit(1);
+    }
 }
 
 void accounts_collection::add_account(int acc_num, int pswrd, int initial_blnce){
-    sem_wait(&wr_sem);
-    collection[acc_num] = account(acc_num,pswrd,initial_blnce);
-    sem_post(&wr_sem);
+    if(sem_wait(&wr_sem) < 0)
+    {
+        fprintf(stderr, "error: on sem_wait syscall\n");
+        exit(1);
+    }
+    collection[acc_num] = account(acc_num,pswrd,initial_blnce)
+    if(sem_post(&wr_sem) < 0)
+    {
+        fprintf(stderr, "error: on sem_post syscall\n");
+        exit(1);
+    }
 }
 
 int accounts_collection::remove_account(int acc_num)
 {
-    sem_wait(&wr_sem);
+    if(sem_wait(&wr_sem) < 0)
+    {
+        fprintf(stderr, "error: on sem_wait syscall\n");
+        exit(1);
+    }
+
     int balance = collection.at(acc_num).get_balance_no_sleep();
     collection.erase(acc_num);
-    sem_post(&wr_sem);
+
+    if(sem_post(&wr_sem) < 0)
+    {
+        fprintf(stderr, "error: on sem_post syscall\n");
+        exit(1);
+    }
     return balance;
 }
 
 account& accounts_collection::get_account(int acc_num)
 {
-    sem_wait(&rd_sem);
+    if(sem_wait(&rd_sem) < 0)
+    {
+        fprintf(stderr, "error: on sem_wait syscall\n");
+        exit(1);
+    }
     rd_cnt++;
     if (rd_cnt == 1) 
-        sem_wait(&wr_sem);
-    sem_post(&rd_sem); 
+    {
+        if(sem_wait(&wr_sem) < 0)
+        {
+            fprintf(stderr, "error: on sem_wait syscall\n");
+            exit(1);
+        }
+    }
+    if(sem_post(&rd_sem) < 0)
+    {
+        fprintf(stderr, "error: on sem_post syscall\n");
+        exit(1);
+    } 
 
     auto& ret_acc = collection[acc_num];
 
-    sem_wait(&rd_sem);
+    if(sem_wait(&rd_sem) < 0)
+    {
+        fprintf(stderr, "error: on sem_wait syscall\n");
+        exit(1);
+    }
     rd_cnt--;
     if(rd_cnt == 0) 
-        sem_post(&wr_sem);
-    sem_post(&rd_sem);
+    {
+        if(sem_post(&wr_sem) < 0)
+        {
+            fprintf(stderr, "error: on sem_post syscall\n");
+            exit(1);
+        }
+    }
+    if(sem_post(&rd_sem) < 0)
+    {
+        fprintf(stderr, "error: on sem_post syscall\n");
+        exit(1);
+    } 
 
     return ret_acc; 
 }
@@ -82,7 +140,11 @@ void accounts_collection::collect_fees()
 {
     int fee_percent = (std::rand()%3) + 2;
 
-    sem_wait(&wr_sem);
+    if(sem_wait(&wr_sem) < 0)
+    {
+        fprintf(stderr, "error: on sem_wait syscall\n");
+        exit(1);
+    }
 
     for(auto iter_acc = collection.begin(); iter_acc != collection.end(); iter_acc++)
     {
@@ -93,38 +155,84 @@ void accounts_collection::collect_fees()
         print_to_log(s);
     }
 
-    sem_post(&wr_sem);
+    if(sem_post(&wr_sem) < 0)
+    {
+        fprintf(stderr, "error: on sem_post syscall\n");
+        exit(1);
+    }
 }
 
 int accounts_collection::get_bank_balance()
 {
-    sem_wait(&rd_sem);
+    if(sem_wait(&rd_sem) < 0)
+    {
+        fprintf(stderr, "error: on sem_wait syscall\n");
+        exit(1);
+    }
     rd_cnt++;
     if (rd_cnt == 1) 
-        sem_wait(&wr_sem);
-    sem_post(&rd_sem); 
+    {
+        if(sem_wait(&wr_sem) < 0)
+        {
+            fprintf(stderr, "error: on sem_wait syscall\n");
+            exit(1);
+        }
+    }
+    if(sem_post(&rd_sem) < 0)
+    {
+        fprintf(stderr, "error: on sem_post syscall\n");
+        exit(1);
+    } 
 
     auto b = bank_balance;
-
-    sem_wait(&rd_sem);
+        
+    if(sem_wait(&rd_sem) < 0)
+    {
+        fprintf(stderr, "error: on sem_wait syscall\n");
+        exit(1);
+    }
     rd_cnt--;
     if(rd_cnt == 0) 
-        sem_post(&wr_sem);
-    sem_post(&rd_sem);
+    {
+        if(sem_post(&wr_sem) < 0)
+        {
+            fprintf(stderr, "error: on sem_post syscall\n");
+            exit(1);
+        }
+    }
+    if(sem_post(&rd_sem) < 0)
+    {
+        fprintf(stderr, "error: on sem_post syscall\n");
+        exit(1);
+    } 
 
     return b; 
 }
 
 void accounts_collection::print_accounts()
 {
-    sem_wait(&rd_sem);
+    if(sem_wait(&rd_sem) < 0)
+    {
+        fprintf(stderr, "error: on sem_wait syscall\n");
+        exit(1);
+    }
     rd_cnt++;
     if (rd_cnt == 1) 
-        sem_wait(&wr_sem);
-    sem_post(&rd_sem); 
+    {
+        if(sem_wait(&wr_sem) < 0)
+        {
+            fprintf(stderr, "error: on sem_wait syscall\n");
+            exit(1);
+        }
+    }
+    if(sem_post(&rd_sem) < 0)
+    {
+        fprintf(stderr, "error: on sem_post syscall\n");
+        exit(1);
+    } 
 
-    printf("\033[2J");
-    printf("\033[1;1H");
+    printf(“\033[2J”);
+    printf(“\033[1;1H”);
     printf("current bank status\n");
     for(auto iter_acc = collection.begin(); iter_acc != collection.end(); iter_acc++)
     {
@@ -133,27 +241,70 @@ void accounts_collection::print_accounts()
     }
     printf("the bank has %d $\n", bank_balance);
 
-    sem_wait(&rd_sem);
+    if(sem_wait(&rd_sem) < 0)
+    {
+        fprintf(stderr, "error: on sem_wait syscall\n");
+        exit(1);
+    }
     rd_cnt--;
     if(rd_cnt == 0) 
-        sem_post(&wr_sem);
-    sem_post(&rd_sem);
+    {
+        if(sem_post(&wr_sem) < 0)
+        {
+            fprintf(stderr, "error: on sem_post syscall\n");
+            exit(1);
+        }
+    }
+    if(sem_post(&rd_sem) < 0)
+    {
+        fprintf(stderr, "error: on sem_post syscall\n");
+        exit(1);
+    } 
 }
 
-bool accounts_collection::acount_exists(int acc_num){
-    sem_wait(&rd_sem);
+bool accounts_collection::acount_exists(int acc_num)
+{
+    if(sem_wait(&rd_sem) < 0)
+    {
+        fprintf(stderr, "error: on sem_wait syscall\n");
+        exit(1);
+    }
     rd_cnt++;
     if (rd_cnt == 1) 
-        sem_wait(&wr_sem);
-    sem_post(&rd_sem); 
-
+    {
+        if(sem_wait(&wr_sem) < 0)
+        {
+            fprintf(stderr, "error: on sem_wait syscall\n");
+            exit(1);
+        }
+    }
+    if(sem_post(&rd_sem) < 0)
+    {
+        fprintf(stderr, "error: on sem_post syscall\n");
+        exit(1);
+    } 
+    
     bool res = (collection.find(acc_num) != collection.end());
 
-    sem_wait(&rd_sem);
+    if(sem_wait(&rd_sem) < 0)
+    {
+        fprintf(stderr, "error: on sem_wait syscall\n");
+        exit(1);
+    }
     rd_cnt--;
     if(rd_cnt == 0) 
-        sem_post(&wr_sem);
-    sem_post(&rd_sem);
+    {
+        if(sem_post(&wr_sem) < 0)
+        {
+            fprintf(stderr, "error: on sem_post syscall\n");
+            exit(1);
+        }
+    }
+    if(sem_post(&rd_sem) < 0)
+    {
+        fprintf(stderr, "error: on sem_post syscall\n");
+        exit(1);
+    } 
 
     return res;
 }
